@@ -188,6 +188,16 @@ def is_model_meta_subclass(node):
     return node_is_subclass(node.parent, *parents)
 
 
+def is_model_factory_meta_subclass(node):
+    """Checks that node is derivative of DjangoModelFactory class."""
+    if node.name != 'Meta' or not isinstance(node.parent, ClassDef):
+        return False
+
+    parents = ('factory.django.DjangoModelFactory',
+               '.DjangoModelFactory',)
+    return node_is_subclass(node.parent, *parents)
+
+
 def is_model_mpttmeta_subclass(node):
     """Checks that node is derivative of MPTTMeta class."""
     if node.name != 'MPTTMeta' or not isinstance(node.parent, ClassDef):
@@ -407,6 +417,12 @@ def apply_augmentations(linter):
     suppress_message(linter, _visit_class(NewStyleConflictChecker), 'old-style-class', is_model_mpttmeta_subclass)
     suppress_message(linter, _visit_class(ClassChecker), 'W0232', is_model_mpttmeta_subclass)
     suppress_message(linter, _leave_class(MisdesignChecker), 'too-few-public-methods', is_model_mpttmeta_subclass)
+
+    # factory_boy's DjangoModelFactory
+    suppress_message(linter, _visit_class(DocStringChecker), 'missing-docstring', is_model_factory_meta_subclass)
+    suppress_message(linter, _visit_class(NewStyleConflictChecker), 'old-style-class', is_model_factory_meta_subclass)
+    suppress_message(linter, _visit_class(ClassChecker), 'W0232', is_model_factory_meta_subclass)
+    suppress_message(linter, _leave_class(MisdesignChecker), 'too-few-public-methods', is_model_factory_meta_subclass)
 
     # ForeignKey and OneToOneField
     VariablesChecker.leave_module = wrap(VariablesChecker.leave_module, ignore_import_warnings_for_related_fields)
